@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', sans-serif;
+    --font-poppins: 'Poppins', sans-serif;
+  }
+
+  body {
+    @apply bg-[#1a1a4f] text-gray-100 antialiased min-h-screen;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.15), transparent 50%),
+      radial-gradient(circle at 100% 0%, rgba(79, 70, 229, 0.15), transparent 50%);
+  }
+
+  /* Ensure all text is visible by default */
+  h1, h2, h3, h4, h5, h6, p, span, div {
+    @apply text-gray-100;
+  }
+
+  /* Make links stand out */
+  a {
+    @apply text-[#93c5fd] hover:text-[#bfdbfe] transition-colors duration-200;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-gradient-to-r from-[#4f46e5] to-[#7c3aed] text-white rounded-md 
+           relative overflow-hidden shadow-[0_0_20px_rgba(124,58,237,0.3)]
+           hover:shadow-[0_0_30px_rgba(124,58,237,0.5)]
+           transition-all duration-300 ease-out;
+  }
+
+  .btn-primary::before {
+    @apply content-[''] absolute inset-0 bg-white opacity-0
+           hover:opacity-20 transition-opacity duration-300;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-[#2d1b69]/20 text-gray-100 border border-[#4f46e5]/20 rounded-md 
+           backdrop-blur-sm hover:bg-[#2d1b69]/30 hover:border-[#7c3aed]/30
+           transition-all duration-300 ease-out;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 bg-[#2d1b69]/20 border border-[#4f46e5]/20 rounded-md text-gray-100
+           focus:border-[#7c3aed]/50 focus:ring-1 focus:ring-[#7c3aed]/50
+           placeholder-gray-400 backdrop-blur-sm
+           transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-[#2d1b69]/20 backdrop-blur-md rounded-lg border border-[#4f46e5]/20
+           hover:border-[#7c3aed]/30 transition-all duration-300 ease-out
+           shadow-[0_0_20px_rgba(124,58,237,0.1)];
+  }
+
+  .glass {
+    @apply bg-[#2d1b69]/20 backdrop-blur-md border-b border-[#4f46e5]/20 
+           shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+  }
+
+  /* Labels and form text */
+  .form-label {
+    @apply text-gray-300 font-medium;
+  }
+
+  /* Status and info text */
+  .status-text {
+    @apply text-gray-300;
+  }
+
+  /* Section headings */
+  .section-heading {
+    @apply text-gray-100 font-semibold;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#1a1a4f];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gradient-to-b from-[#4f46e5] to-[#7c3aed] rounded-full;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#93c5fd] via-[#4f46e5] to-[#7c3aed]
+         hover:from-[#7c3aed] hover:to-[#93c5fd] transition-all duration-300;
+}
+
+/* Glow effects */
+.glow-sm {
+  @apply shadow-[0_0_20px_rgba(124,58,237,0.3)];
+}
+
+.glow-lg {
+  @apply shadow-[0_0_30px_rgba(124,58,237,0.5)];
+}
+
+/* Floating animation */
+.floating {
+  @apply animate-float;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+} 
