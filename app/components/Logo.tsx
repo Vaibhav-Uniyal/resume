@@ -10,7 +10,7 @@ export default function Logo({ size = 'normal' }: { size?: 'normal' | 'large' })
     >
       <div className="relative">
         <motion.div
-          className={`absolute -inset-2 bg-gradient-to-r from-[#4f46e5] via-[#7c3aed] to-[#0099cc] rounded-lg opacity-75 blur-lg`}
+          className={`absolute -inset-2 bg-gradient-to-r from-pink-500 via-purple-600 to pink-700 rounded-lg opacity-75 blur-lg`}
           animate={{
             opacity: [0.5, 0.8, 0.5],
             scale: [1, 1.1, 1],
@@ -22,8 +22,8 @@ export default function Logo({ size = 'normal' }: { size?: 'normal' | 'large' })
           }}
         />
         <span className={`relative font-display font-bold ${size === 'large' ? 'text-6xl' : 'text-3xl'}`}>
-          <span className="text-white">Resu</span>
-          <span className="text-[#93c5fd]">mate</span>
+          <span className="text-pink">Resu</span>
+          <span className="text-pink">mate</span>
         </span>
       </div>
       {size === 'large' && (
@@ -47,7 +47,7 @@ export default function Logo({ size = 'normal' }: { size?: 'normal' | 'large' })
         >
           <motion.path
             d="M10 30 L50 30 L110 10"
-            stroke="#93c5fd"
+            stroke="#00ff00"
             strokeWidth="3"
             fill="none"
             initial={{ pathLength: 0 }}
@@ -61,7 +61,7 @@ export default function Logo({ size = 'normal' }: { size?: 'normal' | 'large' })
               y={30 - i * 4}
               width="8"
               height={4 + i * 4}
-              fill="#93c5fd"
+              fill="#00ff00"
               initial={{ scaleY: 0 }}
               animate={{ scaleY: 1 }}
               transition={{ delay: 0.8 + i * 0.1, duration: 0.4 }}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { optimizeResumeForJob } from '../utils/aiService';
 
 interface JobOptimizationProps {
   resumeData: string;
@@ -11,15 +12,36 @@ interface JobOptimizationProps {
 export default function JobOptimization({ resumeData, onOptimize }: JobOptimizationProps) {
   const [jobTitle, setJobTitle] = useState('');
   const [jobDescription, setJobDescription] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [optimizedResume, setOptimizedResume] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleOptimize = async () => {
-    setIsLoading(true);
-    // Simulate API call - replace with actual OpenAI API call
-    setTimeout(() => {
-      setIsLoading(false);
-      onOptimize(85); // Simulated ATS score
-    }, 2000);
+    if (!jobTitle || !jobDescription) {
+      setError('Please fill in both job title and description');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await optimizeResumeForJob({
+        resumeText: resumeData,
+        jobTitle,
+        jobDescription,
+      });
+
+      setOptimizedResume(result.optimizedResume);
+      setShowPreview(true);
+      onOptimize(result.score);
+    } catch (err) {
+      setError('Failed to optimize resume. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -27,95 +49,114 @@ export default function JobOptimization({ resumeData, onOptimize }: JobOptimizat
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="card p-6 space-y-6"
+      className="space-y-8"
     >
-      <h2 className="text-2xl font-display font-bold gradient-text mb-4">
-        Job-Specific Optimization
-      </h2>
+      <div className="text-center">
+        <h2 className="text-3xl font-bold bg-gradient-text">Job-Specific Optimization</h2>
+        <p className="text-content-muted mt-2">
+          Enter the job details to optimize your resume for this specific position
+        </p>
+      </div>
 
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="jobTitle" className="block text-gray-200 font-medium mb-2">
-            Job Title
-          </label>
-          <input
-            id="jobTitle"
-            type="text"
-            value={jobTitle}
-            onChange={(e) => setJobTitle(e.target.value)}
-            placeholder="Enter the job title you're applying for..."
-            className="input-field"
-          />
+      <div className="bg-background-light/10 backdrop-blur-sm rounded-xl p-6 space-y-6">
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="jobTitle" className="block text-sm font-medium text-content-primary mb-2">
+              Job Title
+            </label>
+            <input
+              type="text"
+              id="jobTitle"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              className="w-full px-4 py-2 bg-background-light/5 border border-background-light/20 
+                       rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              placeholder="e.g. Senior Software Engineer"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="jobDescription" className="block text-sm font-medium text-content-primary mb-2">
+              Job Description
+            </label>
+            <textarea
+              id="jobDescription"
+              value={jobDescription}
+              onChange={(e) => setJobDescription(e.target.value)}
+              rows={6}
+              className="w-full px-4 py-2 bg-background-light/5 border border-background-light/20 
+                       rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              placeholder="Paste the full job description here..."
+            />
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="jobDescription" className="block text-gray-200 font-medium mb-2">
-            Job Description
-          </label>
-          <textarea
-            id="jobDescription"
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            placeholder="Paste the job description here..."
-            rows={6}
-            className="input-field resize-none"
-          />
+        {error && (
+          <div className="text-red-500 text-sm">{error}</div>
+        )}
+
+        <div className="flex justify-center">
+          <button
+            onClick={handleOptimize}
+            disabled={loading}
+            className="px-8 py-3 bg-gradient-primary text-white rounded-full
+                     hover:shadow-button transform hover:scale-105 transition-all duration-300
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Optimizing...</span>
+              </div>
+            ) : (
+              'Optimize for Job'
+            )}
+          </button>
         </div>
       </div>
 
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleOptimize}
-          disabled={isLoading || !jobTitle || !jobDescription}
-          className={`btn-primary flex items-center space-x-2 ${
-            isLoading || !jobTitle || !jobDescription
-              ? 'opacity-50 cursor-not-allowed'
-              : 'hover:scale-105'
-          }`}
+      {showPreview && optimizedResume && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-background-light/10 backdrop-blur-sm rounded-xl p-6 space-y-4"
         >
-          {isLoading ? (
-            <>
-              <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span>Optimizing...</span>
-            </>
-          ) : (
-            <>
-              <span>Optimize for Job</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </>
-          )}
-        </button>
-      </div>
+          <h3 className="text-xl font-semibold">Preview of Optimized Resume</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-lg font-medium mb-2">Original Resume</h4>
+              <div className="bg-background-light/5 rounded-lg p-4 h-96 overflow-auto">
+                <pre className="text-sm whitespace-pre-wrap">{resumeData}</pre>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-lg font-medium mb-2">Optimized Resume</h4>
+              <div className="bg-background-light/5 rounded-lg p-4 h-96 overflow-auto">
+                <pre className="text-sm whitespace-pre-wrap">{optimizedResume}</pre>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => setShowPreview(false)}
+              className="px-6 py-2 bg-background-light/20 text-white rounded-full
+                       hover:bg-background-light/30 transition-all duration-300"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => onOptimize(85)} // Replace with actual score
+              className="px-6 py-2 bg-gradient-primary text-white rounded-full
+                       hover:shadow-button transform hover:scale-105 transition-all duration-300"
+            >
+              Continue
+            </button>
+          </div>
+        </motion.div>
+      )}
     </motion.div>
   );
 } 

@@ -20,52 +20,127 @@ const teamMembers = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background-light via-white to-background-light">
+    <div className="min-h-screen bg-gradient-to-br from-[#1f004d] via-[#2e0066] via-[#330033] to-[#00001a] animate-gradient-bg font-['Poppins']">
+      <style jsx global>{`
+        @keyframes gradientBG {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-bg {
+          background-size: 400% 400%;
+          animation: gradientBG 15s ease infinite;
+          margin: 0;
+          font-family: 'Poppins', sans-serif;
+          color: white;
+        }
+        .flip-card {
+          perspective: 1000px;
+          height: 300px;
+        }
+        .flip-card-inner {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          text-align: center;
+          transition: transform 0.8s;
+          transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner {
+          transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+          border-radius: 1rem;
+          padding: 1.5rem;
+        }
+        .flip-card-front {
+          background: linear-gradient(145deg, rgba(50, 0, 80, 0.9), rgba(30, 0, 50, 0.8));
+          box-shadow: 0 0 20px rgba(183, 0, 255, 0.4), 0 0 40px rgba(100, 0, 255, 0.2);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .flip-card-back {
+          background: linear-gradient(145deg, rgba(50, 0, 80, 0.9), rgba(30, 0, 50, 0.8));
+          box-shadow: 0 0 20px rgba(183, 0, 255, 0.4), 0 0 40px rgba(100, 0, 255, 0.2);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transform: rotateY(180deg);
+        }
+        .gradient-text {
+          font-family: 'Poppins', sans-serif;
+          font-weight: 700;
+          background: linear-gradient(to right, #ff00cc, #3333ff);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+      `}</style>
       <Navbar />
-      
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16"
-        >
-          <h1 className="text-4xl font-display font-bold gradient-text mb-4">
-            About Us
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            We're a team of passionate professionals dedicated to helping job seekers
-            optimize their resumes and land their dream jobs.
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {teamMembers.map((member, index) => (
-            <motion.div
-              key={member.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 }}
-              className="group relative"
-            >
-              <div className="card transform transition-all duration-300 group-hover:scale-105">
-                <div className="relative h-64 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover transform transition-transform duration-300 group-hover:scale-110"
-                  />
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-display font-bold gradient-text mb-8 text-center">About Us</h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="flip-card">
+              <div className="flip-card-inner">
+                <div className="flip-card-front flex flex-col items-center justify-center">
+                  <h2 className="text-2xl font-bold gradient-text mb-4">Our Mission</h2>
+                  <p className="text-gray-300">Click to learn more about our mission</p>
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {member.name}
-                  </h3>
-                  <p className="text-primary font-medium mb-4">{member.role}</p>
-                  <p className="text-gray-600">{member.bio}</p>
+                <div className="flip-card-back flex flex-col items-center justify-center">
+                  <p className="text-gray-300">
+                    Our mission is to revolutionize the job application process by providing AI-powered resume optimization tools that help candidates stand out in today's competitive job market.
+                  </p>
                 </div>
               </div>
-            </motion.div>
-          ))}
+            </div>
+
+            <div className="flip-card">
+              <div className="flip-card-inner">
+                <div className="flip-card-front flex flex-col items-center justify-center">
+                  <h2 className="text-2xl font-bold gradient-text mb-4">Our Vision</h2>
+                  <p className="text-gray-300">Click to learn more about our vision</p>
+                </div>
+                <div className="flip-card-back flex flex-col items-center justify-center">
+                  <p className="text-gray-300">
+                    We envision a world where every job seeker has access to powerful tools that help them present their skills and experience in the most compelling way possible.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flip-card">
+              <div className="flip-card-inner">
+                <div className="flip-card-front flex flex-col items-center justify-center">
+                  <h2 className="text-2xl font-bold gradient-text mb-4">Our Technology</h2>
+                  <p className="text-gray-300">Click to learn more about our technology</p>
+                </div>
+                <div className="flip-card-back flex flex-col items-center justify-center">
+                  <p className="text-gray-300">
+                    We leverage cutting-edge AI and machine learning technologies to analyze resumes and provide personalized recommendations for improvement.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flip-card">
+              <div className="flip-card-inner">
+                <div className="flip-card-front flex flex-col items-center justify-center">
+                  <h2 className="text-2xl font-bold gradient-text mb-4">Our Team</h2>
+                  <p className="text-gray-300">Click to learn more about our team</p>
+                </div>
+                <div className="flip-card-back flex flex-col items-center justify-center">
+                  <p className="text-gray-300">
+                    Our team consists of passionate professionals dedicated to making the job search process more efficient and effective for everyone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -6,8 +6,35 @@ interface ResumeFormProps {
   onSubmit: (data: any) => void;
 }
 
+type FormData = {
+  personalInfo: {
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    linkedin: string;
+  };
+  summary: string;
+  experience: {
+    title: string;
+    company: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+  }[];
+  education: {
+    degree: string;
+    school: string;
+    location: string;
+    graduationDate: string;
+    gpa: string;
+  }[];
+  skills: string;
+};
+
 export default function ResumeForm({ onSubmit }: ResumeFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     personalInfo: {
       name: '',
       email: '',
@@ -34,7 +61,7 @@ export default function ResumeForm({ onSubmit }: ResumeFormProps) {
     skills: '',
   });
 
-  const handleChange = (section: string, field: string, value: string, index?: number) => {
+  const handleChange = (section: keyof FormData, field: string, value: string, index?: number) => {
     setFormData(prev => {
       if (index !== undefined && Array.isArray(prev[section])) {
         const newArray = [...prev[section]];
@@ -51,7 +78,9 @@ export default function ResumeForm({ onSubmit }: ResumeFormProps) {
     });
   };
 
-  const addItem = (section: string) => {
+  const addItem = (section: keyof FormData) => {
+    if (section !== 'experience' && section !== 'education') return;
+    
     setFormData(prev => ({
       ...prev,
       [section]: [...prev[section], section === 'experience' ? {
@@ -256,7 +285,12 @@ export default function ResumeForm({ onSubmit }: ResumeFormProps) {
         />
       </div>
 
-      <button type="submit" className="btn-primary w-full">
+      <button 
+        type="submit" 
+        className="w-full px-6 py-3 bg-purple-500 text-white rounded-xl font-bold 
+                  hover:bg-green-500 transition-all duration-300
+                  disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         Generate Resume
       </button>
     </form>

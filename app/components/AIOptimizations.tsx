@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import OpenAI from 'openai';
 
 interface AIOptimizationsProps {
   resumeData: any;
@@ -17,49 +16,22 @@ export default function AIOptimizations({ resumeData, atsScore }: AIOptimization
   useEffect(() => {
     const generateSuggestions = async () => {
       try {
-        const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-        if (!apiKey) {
-          throw new Error('OpenAI API key is not configured');
+        const response = await fetch('/api/optimize', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ resumeData, atsScore }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to optimize resume');
         }
 
-        const openai = new OpenAI({
-          apiKey,
-          dangerouslyAllowBrowser: true // Required for client-side usage
-        });
-
-        const response = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: "You are a professional resume optimization expert. Analyze the resume and provide specific, actionable suggestions for improvement."
-            },
-            {
-              role: "user",
-              content: `Please analyze this resume and provide optimization suggestions. Current ATS score: ${atsScore}%. Resume data: ${JSON.stringify(resumeData)}`
-            }
-          ],
-        });
-
-        const suggestions = response.choices[0].message.content?.split('\n').filter(Boolean) || [];
-        setSuggestions(suggestions);
-
-        // Generate optimized version
-        const optimizedResponse = await openai.chat.completions.create({
-          model: "gpt-4",
-          messages: [
-            {
-              role: "system",
-              content: "You are a professional resume writer. Rewrite the resume to optimize it for ATS systems while maintaining a professional tone."
-            },
-            {
-              role: "user",
-              content: `Please optimize this resume: ${JSON.stringify(resumeData)}`
-            }
-          ],
-        });
-
-        setOptimizedResume(optimizedResponse.choices[0].message.content || '');
+        const data = await response.json();
+        setSuggestions(data.suggestions);
+        setOptimizedResume(data.optimizedResume);
         setError(null);
       } catch (error) {
         console.error('Error generating suggestions:', error);
@@ -69,7 +41,9 @@ export default function AIOptimizations({ resumeData, atsScore }: AIOptimization
       }
     };
 
-    generateSuggestions();
+    if (resumeData && atsScore !== null) {
+      generateSuggestions();
+    }
   }, [resumeData, atsScore]);
 
   const handleDownload = () => {
@@ -99,7 +73,7 @@ export default function AIOptimizations({ resumeData, atsScore }: AIOptimization
         <h2 className="text-2xl font-semibold mb-6">AI Optimization Analysis</h2>
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-600">{error}</p>
-          <p className="text-red-500 mt-2">Please check your API key configuration and try again.</p>
+          <p className="text-red-500 mt-2">Please try again.</p>
         </div>
       </div>
     );

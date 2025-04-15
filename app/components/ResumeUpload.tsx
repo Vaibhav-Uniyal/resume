@@ -1,139 +1,125 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { motion, type HTMLMotionProps, type Variants } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { motion } from 'framer-motion';
-import mammoth from 'mammoth';
 
 interface ResumeUploadProps {
-  onUpload: (data: { original: string; optimized: string; fileName: string }, score: number) => void;
+  onUpload: (text: string) => void;
 }
 
-export default function ResumeUpload({ onUpload }: ResumeUploadProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const animations: Variants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+};
 
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+const ResumeUpload: React.FC<ResumeUploadProps> = ({ onUpload }) => {
+  const [activeTab, setActiveTab] = useState<'upload' | 'paste'>('upload');
+  const [pasteText, setPasteText] = useState('');
+
+  const onDrop = async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
-    if (!file) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      let text = '';
-      
-      if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await mammoth.extractRawText({ arrayBuffer });
-        text = result.value;
-      } else if (file.type === 'application/pdf') {
-        // For PDF files, we'll just read as text for now
-        // In a real application, you'd want to use a PDF parsing library
-        text = await file.text();
-      } else {
-        throw new Error('Unsupported file type. Please upload a PDF or DOCX file.');
-      }
-
-      // Simulate ATS scoring (replace with actual API call)
-      const score = Math.floor(Math.random() * 40) + 30; // Random score between 30-70
-
-      onUpload(
-        {
-          original: text,
-          optimized: '', // Will be filled after optimization
-          fileName: file.name
-        },
-        score
-      );
-    } catch (error) {
-      console.error('Error processing file:', error);
-      setError(error instanceof Error ? error.message : 'Error processing file');
-    } finally {
-      setIsLoading(false);
+    if (file) {
+      const text = await file.text();
+      onUpload(text);
     }
-  }, [onUpload]);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+      'application/msword': ['.doc'],
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'text/plain': ['.txt']
     },
-    maxFiles: 1
+    multiple: false
   });
 
+  const handlePasteSubmit = () => {
+    if (pasteText.trim()) {
+      onUpload(pasteText);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900">Upload Your Resume</h2>
-        <p className="text-gray-600">Upload your resume in PDF or DOCX format to get started</p>
+    <motion.div
+      variants={animations}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="space-y-6"
+    >
+      <div className="flex space-x-4">
+        <button
+          onClick={() => setActiveTab('upload')}
+          className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+            activeTab === 'upload'
+              ? 'bg-purple-500 text-black'
+              : 'bg-transparent text-white hover:bg-white/10'
+          }`}
+        >
+          Upload File
+        </button>
+        <button
+          onClick={() => setActiveTab('paste')}
+          className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+            activeTab === 'paste'
+              ? 'bg-purple-500 text-black'
+              : 'bg-transparent text-white hover:bg-white/10'
+          }`}
+        >
+          Paste Text
+        </button>
       </div>
 
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors duration-200 ${
-          isDragActive
-            ? 'border-primary bg-primary/5'
-            : 'border-gray-300 hover:border-primary hover:bg-gray-50'
-        }`}
-      >
-        <input {...getInputProps()} />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+      {activeTab === 'upload' ? (
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-xl p-12 transition-all duration-300 cursor-pointer
+                     ${isDragActive ? 'border-blue-500 bg-blue-500/10' : 'border-gray-600 hover:border-gray-400'}`}
         >
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <svg
-                className="w-12 h-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
               </svg>
             </div>
             <div>
-              <p className="text-lg font-medium text-gray-900">
-                {isDragActive ? 'Drop your resume here' : 'Drag and drop your resume here'}
-              </p>
-              <p className="text-sm text-gray-500 mt-1">
-                or click to select a file
-              </p>
+              <p className="text-lg text-gray-300 mb-2">Upload your resume</p>
+              <p className="text-sm text-gray-500">PDF, DOCX, or TXT files</p>
             </div>
-            <p className="text-xs text-gray-500">
-              Supported formats: PDF, DOCX
-            </p>
+            <button className="px-6 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 transition-all duration-300">
+              Select File
+            </button>
           </div>
-        </motion.div>
-      </div>
-
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-red-50 border border-red-200 rounded-lg"
-        >
-          <p className="text-red-600">{error}</p>
-        </motion.div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <textarea
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            placeholder="Paste your resume text here..."
+            className="w-full h-64 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl 
+                     text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+          />
+          <div className="flex justify-end">
+            <button
+              onClick={handlePasteSubmit}
+              disabled={!pasteText.trim()}
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg font-medium
+                       hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed
+                       transition-all duration-300"
+            >
+              Continue
+            </button>
+          </div>
+        </div>
       )}
-
-      {isLoading && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="flex justify-center"
-        >
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-        </motion.div>
-      )}
-    </div>
+    </motion.div>
   );
-} 
+};
+
+export default ResumeUpload; 
