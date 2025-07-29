@@ -1,28 +1,32 @@
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { ResumeProvider } from './context/ResumeContext';
 import { Providers } from './providers';
-import './globals.css'
-import { Inter } from 'next/font/google'
+import MouseTrail from './components/MouseTrail';
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
 
-export const metadata = {
-  title: 'Resume Builder with ATS Score',
-  description: 'Build your resume and get ATS score with AI-powered insights',
-}
+export const metadata: Metadata = {
+  title: 'ResuMate - Resume Builder with AI',
+  description: 'Build, optimize and track your resume with AI',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>
-          <main className="min-h-screen bg-gray-50">
+        <ResumeProvider>
+          <Providers>
+            <MouseTrail />
             {children}
-          </main>
-        </Providers>
+          </Providers>
+        </ResumeProvider>
       </body>
     </html>
-  )
+  );
 } 

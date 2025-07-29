@@ -10,8 +10,8 @@ interface LoaderProps {
 }
 
 export default function Loader({ 
-  size = "40", 
-  color = "#7d59f9", // paris-m-500
+  size = "24", 
+  color = "#9333EA",
   speed = "0.9",
   fullScreen = false 
 }: LoaderProps) {

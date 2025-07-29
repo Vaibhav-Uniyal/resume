@@ -1,5 +1,10 @@
 import { MongoClient } from 'mongodb';
 
+// Add global type declaration for MongoDB client
+declare global {
+  var _mongoClientPromise: Promise<MongoClient>;
+}
+
 if (!process.env.MONGODB_URI) {
   throw new Error('Please add your MongoDB URI to .env.local');
 }
@@ -7,8 +12,8 @@ if (!process.env.MONGODB_URI) {
 const uri = process.env.MONGODB_URI;
 const options = {};
 
-let client;
-let clientPromise;
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
 
 if (process.env.NODE_ENV === 'development') {
   // In development mode, use a global variable so that the value

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test-db": "node -e \"require('dotenv').config(); const { MongoClient } = require('mongodb'); async function test() { try { const client = new MongoClient(process.env.MONGODB_URI); await client.connect(); console.log('✅ Connected to MongoDB successfully!'); const db = client.db(process.env.MONGODB_DB); const cols = await db.listCollections().toArray(); console.log(`Found ${cols.length} collections`); await client.close(); } catch (e) { console.error('❌ Connection error:', e.message); } } test();\""
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.8.0",
@@ -13,31 +14,45 @@
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@prisma/client": "^5.7.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/bcryptjs": "^2.4.6",
+    "@types/three": "^0.175.0",
     "autoprefixer": "^10.4.14",
     "axios": "^1.4.0",
     "bcryptjs": "^3.0.2",
-    "framer-motion": "^12.7.2",
+    "docx": "^9.4.1",
+    "dotenv": "^16.5.0",
+    "framer-motion": "^12.7.4",
     "jspdf": "^2.5.1",
     "ldrs": "^1.1.6",
-    "mammoth": "^1.6.0",
+    "mammoth": "^1.9.0",
     "mongodb": "^6.15.0",
     "mongoose": "^8.13.2",
     "next": "^13.4.7",
     "next-auth": "^4.24.11",
     "openai": "^4.0.0",
+    "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^3.11.174",
     "postcss": "^8.4.24",
+    "powerbi-client": "^2.23.1",
+    "powerbi-client-react": "^2.0.0",
     "prisma": "^5.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
     "react-hot-toast": "^2.4.1",
     "react-icons": "^5.5.0",
-    "tailwindcss": "^3.3.2"
+    "react-markdown": "^10.1.0",
+    "react-pdf": "^9.2.1",
+    "remark-gfm": "^4.0.1",
+    "supports-color": "^10.0.0",
+    "tailwindcss": "^3.3.2",
+    "three": "^0.175.0"
   },
   "devDependencies": {
     "@types/react": "19.0.10",
+    "null-loader": "^4.0.1",
     "typescript": "5.8.2"
   }
 }

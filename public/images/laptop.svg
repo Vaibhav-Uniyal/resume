@@ -1,0 +1,28 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Laptop Base -->
+  <rect x="50" y="240" width="300" height="10" rx="2" fill="#333" />
+  <path d="M60 240L65 250H335L340 240H60Z" fill="#444" />
+  
+  <!-- Laptop Body -->
+  <rect x="75" y="90" width="250" height="160" rx="5" fill="#444" />
+  <rect x="75" y="90" width="250" height="160" rx="5" stroke="#333" strokeWidth="2" />
+  
+  <!-- Laptop Screen Frame -->
+  <rect x="85" y="100" width="230" height="140" rx="2" fill="#222" />
+  
+  <!-- Laptop Screen -->
+  <rect x="90" y="105" width="220" height="130" rx="2" fill="#9333EA" fillOpacity="0.9" />
+  
+  <!-- Screen Content -->
+  <rect x="100" y="115" width="120" height="20" rx="2" fill="white" fillOpacity="0.2" />
+  <rect x="100" y="145" width="200" height="5" rx="2" fill="white" fillOpacity="0.2" />
+  <rect x="100" y="155" width="180" height="5" rx="2" fill="white" fillOpacity="0.2" />
+  <rect x="100" y="165" width="190" height="5" rx="2" fill="white" fillOpacity="0.2" />
+  <rect x="100" y="175" width="170" height="5" rx="2" fill="white" fillOpacity="0.2" />
+  <rect x="100" y="185" width="190" height="5" rx="2" fill="white" fillOpacity="0.2" />
+  <rect x="100" y="195" width="150" height="5" rx="2" fill="white" fillOpacity="0.2" />
+  <rect x="100" y="205" width="180" height="5" rx="2" fill="white" fillOpacity="0.2" />
+  
+  <!-- Laptop Keyboard (hint) -->
+  <rect x="170" y="230" width="60" height="5" rx="2" fill="#555" />
+</svg> 

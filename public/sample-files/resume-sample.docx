@@ -1,0 +1,33 @@
+This is a placeholder for a DOCX file. In a real application, this would be an actual DOCX document created with a proper library like docx-js or similar.
+
+JOHN DOE
+Software Engineer
+john.doe@example.com | (123) 456-7890 | linkedin.com/in/johndoe
+
+SUMMARY
+Experienced software engineer with 5+ years of experience in full-stack development, 
+specializing in React, Node.js, and cloud technologies. Strong problem-solving abilities
+and a track record of delivering high-quality products in fast-paced environments.
+
+EXPERIENCE
+Senior Software Engineer | Tech Solutions Inc. | 2020 - Present
+- Led development of a customer-facing web application using React and TypeScript
+- Improved application performance by 40% through code optimization and caching strategies
+- Mentored junior developers and conducted code reviews for team of 6 engineers
+
+Software Engineer | Data Systems LLC | 2017 - 2020
+- Developed RESTful APIs using Node.js and Express for data processing applications
+- Implemented CI/CD pipelines reducing deployment time by 60%
+- Collaborated with UX team to redesign application interface, increasing user engagement by 25%
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Technology, 2017
+
+SKILLS
+- Languages: JavaScript, TypeScript, Python, Java
+- Frontend: React, Redux, HTML5, CSS3, SCSS
+- Backend: Node.js, Express, Django
+- Databases: MongoDB, PostgreSQL, MySQL
+- Tools: Git, Docker, Kubernetes, AWS
+- Methodologies: Agile, Scrum, TDD 

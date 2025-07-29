@@ -2,8 +2,35 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '@/lib/mongodb';
 import { compare } from 'bcryptjs';
+import { AuthOptions } from 'next-auth';
+import { JWT } from 'next-auth/jwt';
 
-export const authOptions = {
+// Extend the built-in session types
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    }
+  }
+  
+  interface User {
+    id: string;
+    name?: string;
+    email: string;
+  }
+}
+
+// Extend JWT type
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id?: string;
+  }
+}
+
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'Credentials',

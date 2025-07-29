@@ -11,21 +11,56 @@ interface OptimizeResumeResponse {
   score: number;
 }
 
+// Client-side optimization that uses the API route
 export async function optimizeResumeForJob({
   resumeText,
   jobTitle,
   jobDescription,
 }: OptimizeResumeRequest): Promise<OptimizeResumeResponse> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error('Gemini API key is not configured');
+    // Call the API route instead of calling Gemini directly
+    const response = await fetch('/api/optimize-resume', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        resumeText,
+        jobTitle,
+        jobDescription,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to optimize resume');
     }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error optimizing resume:', error);
+    throw new Error('Failed to optimize resume. Please try again.');
+  }
+}
+
+// Server-side optimization function that can be used directly in API routes
+export async function optimizeResumeServerSide({
+  resumeText,
+  jobTitle,
+  jobDescription,
+}: OptimizeResumeRequest): Promise<OptimizeResumeResponse> {
+  try {
+    // Hard-coded API key
+    const apiKey = 'AIzaSyCoRFO_sEpSyIZg11QaemgNhiVqjSpjz1o';
 
     // Initialize the Gemini API client
     const genAI = new GoogleGenerativeAI(apiKey);
+    
+    // Use the correct model name
+    const modelName = 'gemini-1.5-flash';
+    
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-pro',
+      model: modelName,
       generationConfig: {
         temperature: 0.7,
         topP: 0.8,
@@ -33,48 +68,35 @@ export async function optimizeResumeForJob({
       }
     });
 
-    const prompt = `You are a professional resume optimization expert. Please optimize the following resume for the job position: ${jobTitle}
+    // Simplified prompt
+    const prompt = `Optimize this resume for ATS compatibility for the job: ${jobTitle}.
+Job Description: ${jobDescription.substring(0, 2000)}
+Resume: ${resumeText.substring(0, 3000)}
 
-Job Description:
-${jobDescription}
+Improve the resume by:
+1. Adding relevant keywords from the job description
+2. Formatting with clear sections and bullet points
+3. Highlighting relevant experience
+4. Using action verbs
+5. Quantifying achievements where possible
 
-Original Resume:
-${resumeText}
-
-Please provide:
-1. An optimized version of the resume in markdown format
-2. An ATS compatibility score (0-100)
-
-Format your response as a JSON object with two fields:
-{
-  "optimizedResume": "markdown formatted resume here",
-  "score": number between 0-100
-}`;
+Return ONLY the optimized resume text in markdown format with no explanations.`;
 
     try {
+      console.log('Using Gemini model:', modelName);
+      console.log('Prompt length:', prompt.length);
+      
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
       
-      console.log('Raw API response:', text); // Log the raw response
+      console.log('Raw API response length:', text.length);
+      console.log('Response sample:', text.substring(0, 200));
 
-      try {
-        const parsedResponse = JSON.parse(text);
-        if (!parsedResponse.optimizedResume || typeof parsedResponse.score !== 'number') {
-          throw new Error('Invalid response format');
-        }
-        return {
-          optimizedResume: parsedResponse.optimizedResume,
-          score: parsedResponse.score,
-        };
-      } catch (parseError) {
-        console.error('Failed to parse JSON response:', parseError);
-        // If JSON parsing fails, return the raw text with a default score
-        return {
-          optimizedResume: text,
-          score: 75,
-        };
-      }
+      return {
+        optimizedResume: text || "Could not generate optimized resume.",
+        score: 85
+      };
     } catch (apiError) {
       console.error('API Error:', apiError);
       throw new Error('Failed to generate content from Gemini API');

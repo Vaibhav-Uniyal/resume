@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Chip } from '@mui/material';
+import { analyzeResumeWithGemini } from '../utils/geminiApi';
+import { useSkillsContext } from '../context/SkillsContext';
 
 interface ATSDashboardProps {
   resumeText: string;
@@ -14,41 +15,48 @@ export default function ATSDashboard({ resumeText, onContinue }: ATSDashboardPro
   const [loading, setLoading] = useState(true);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [strengths, setStrengths] = useState<string[]>([]);
+  const [weaknesses, setWeaknesses] = useState<string[]>([]);
+  const { setSkills } = useSkillsContext();
 
   useEffect(() => {
     const analyzeResume = async () => {
       setLoading(true);
       try {
-        // Mock analysis - replace with actual analysis logic
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Call Gemini API for analysis
+        const analysisResult = await analyzeResumeWithGemini(resumeText);
         
-        // Mock analysis results
-        const mockScore = Math.floor(Math.random() * 30) + 70; // Score between 70-100
-        const mockKeywords = [
-          'React', 'TypeScript', 'Node.js', 'API Development',
-          'Project Management', 'Team Leadership', 'Agile',
-          'Problem Solving', 'Communication'
-        ];
-        const mockSuggestions = [
-          'Add more quantifiable achievements to highlight impact',
-          'Include specific technologies and versions used in projects',
-          'Enhance description of leadership experiences',
-          'Add certifications and professional development activities',
-          'Improve formatting for better ATS readability'
-        ];
-
-        setScore(mockScore);
-        setKeywords(mockKeywords);
-        setSuggestions(mockSuggestions);
+        // Update state with the analysis results
+        setScore(analysisResult.score);
+        setKeywords(analysisResult.keywords);
+        setSuggestions(analysisResult.suggestions);
+        setStrengths(analysisResult.strengths);
+        setWeaknesses(analysisResult.weaknesses);
+        
+        // Save keywords (skills) to global context
+        setSkills(analysisResult.keywords);
       } catch (error) {
         console.error('Error analyzing resume:', error);
+        // Set fallback values in case of error
+        setScore(70);
+        setKeywords(['Error processing resume']);
+        setSuggestions(['An error occurred while analyzing the resume. Please try again.']);
+        setStrengths(['Could not analyze strengths']);
+        setWeaknesses(['Could not analyze weaknesses']);
       } finally {
         setLoading(false);
       }
     };
 
     analyzeResume();
-  }, [resumeText]);
+  }, [resumeText, setSkills]);
+
+  // Calculate the circumference of the circle
+  const radius = 58;
+  const circumference = 2 * Math.PI * radius;
+  
+  // Calculate the dash offset based on the score
+  const dashOffset = ((100 - (score || 0)) / 100) * circumference;
 
   return (
     <motion.div
@@ -60,14 +68,14 @@ export default function ATSDashboard({ resumeText, onContinue }: ATSDashboardPro
       <div className="text-center">
         <h2 className="text-3xl font-bold bg-gradient-text">ATS Score Analysis</h2>
         <p className="text-content-muted mt-2">
-          Here's how your resume performs against Applicant Tracking Systems
+          AI-powered analysis of your resume's ATS compatibility
         </p>
       </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center space-y-4 py-12">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-content-muted">Analyzing your resume...</p>
+          <p className="text-content-muted">Analyzing your resume with AI...</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -75,11 +83,11 @@ export default function ATSDashboard({ resumeText, onContinue }: ATSDashboardPro
             <div className="md:col-span-4">
               <div className="bg-background-light/10 backdrop-blur-sm rounded-xl p-6 text-center">
                 <div className="relative w-32 h-32 mx-auto">
-                  <svg className="w-full h-full transform -rotate-90">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 128 128">
                     <circle
                       cx="64"
                       cy="64"
-                      r="58"
+                      r={radius}
                       fill="none"
                       stroke="rgba(255,255,255,0.1)"
                       strokeWidth="12"
@@ -87,11 +95,13 @@ export default function ATSDashboard({ resumeText, onContinue }: ATSDashboardPro
                     <circle
                       cx="64"
                       cy="64"
-                      r="58"
+                      r={radius}
                       fill="none"
                       stroke="url(#gradient)"
                       strokeWidth="12"
-                      strokeDasharray={`${(score || 0) * 3.64} 364`}
+                      strokeDasharray={circumference}
+                      strokeDashoffset={dashOffset}
+                      strokeLinecap="round"
                       className="transition-all duration-1000 ease-out"
                     />
                     <defs>
@@ -124,13 +134,33 @@ export default function ATSDashboard({ resumeText, onContinue }: ATSDashboardPro
                     </span>
                   ))}
                 </div>
+                
+                <h3 className="text-xl font-semibold mb-4">Key Strengths</h3>
+                <ul className="space-y-2 mb-6">
+                  {strengths.map((strength, index) => (
+                    <li key={index} className="flex items-start space-x-3">
+                      <span className="text-green-400">✓</span>
+                      <span>{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+                
+                <h3 className="text-xl font-semibold mb-4">Areas for Improvement</h3>
+                <ul className="space-y-2 mb-6">
+                  {weaknesses.map((weakness, index) => (
+                    <li key={index} className="flex items-start space-x-3">
+                      <span className="text-yellow-400">⚠</span>
+                      <span>{weakness}</span>
+                    </li>
+                  ))}
+                </ul>
 
-                <h3 className="text-xl font-semibold mb-4">Suggestions for Improvement</h3>
+                <h3 className="text-xl font-semibold mb-4">AI Recommendations</h3>
                 <ul className="space-y-3">
                   {suggestions.map((suggestion, index) => (
                     <li key={index} className="flex items-start space-x-3">
                       <span className="text-primary">•</span>
-                      <span className="text-content-muted">{suggestion}</span>
+                      <span className="text-black">{suggestion}</span>
                     </li>
                   ))}
                 </ul>

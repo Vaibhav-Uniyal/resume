@@ -72,128 +72,109 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1f004d] via-[#2e0066] via-[#330033] to-[#00001a] animate-gradient-bg font-['Poppins']">
-      <style jsx global>{`
-        @keyframes gradientBG {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .animate-gradient-bg {
-          background-size: 400% 400%;
-          animation: gradientBG 15s ease infinite;
-          margin: 0;
-          font-family: 'Poppins', sans-serif;
-          color: white;
-        }
-        .gradient-text {
-          font-family: 'Poppins', sans-serif;
-          font-weight: 700;
-          background: linear-gradient(to right, #ff00cc, #3333ff);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-      `}</style>
+    <div className="min-h-screen w-full bg-[#FAF5FF] font-['Poppins']">
       <Navbar />
       
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-md mx-auto bg-gradient-to-br from-[#320050]/90 to-[#1e0032]/80 rounded-2xl shadow-[0_0_20px_rgba(183,0,255,0.4),0_0_40px_rgba(100,0,255,0.2)] p-10 w-[360px] text-white backdrop-blur-md border border-white/10">
-          <h1 className="text-2xl font-display font-bold gradient-text mb-6">Create Account</h1>
-          
-          {error && (
-            <div className="mb-4 p-3 bg-red-900/50 text-red-200 rounded border border-red-700">
-              {error}
-            </div>
-          )}
+      <main className="w-full">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+          <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-10 w-[360px] text-gray-900 border border-[#EBD5FF]">
+            <h1 className="text-2xl font-display font-bold gradient-text mb-6">Create Account</h1>
+            
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 text-red-800 rounded border border-red-200">
+                {error}
+              </div>
+            )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full px-3 py-3 bg-white/10 border-none rounded-lg text-white placeholder-white/60 focus:outline-none transition-colors duration-200"
-                required
-                minLength={2}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-3 py-3 bg-[#FAF5FF] border border-[#EBD5FF] rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#9333EA]/20 focus:border-[#9333EA] transition-colors duration-200"
+                  required
+                  minLength={2}
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-3 py-3 bg-[#FAF5FF] border border-[#EBD5FF] rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#9333EA]/20 focus:border-[#9333EA] transition-colors duration-200"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-3 py-3 bg-[#FAF5FF] border border-[#EBD5FF] rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#9333EA]/20 focus:border-[#9333EA] transition-colors duration-200"
+                  required
+                  minLength={6}
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full px-3 py-3 bg-[#FAF5FF] border border-[#EBD5FF] rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#9333EA]/20 focus:border-[#9333EA] transition-colors duration-200"
+                  required
+                  minLength={6}
+                  disabled={loading}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full px-6 py-3 bg-[#9333EA] text-white rounded-xl font-bold 
+                          hover:bg-[#7C22CE] transition-all duration-300 shadow-[0_0_10px_rgba(147,51,234,0.3)]
+                          disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
-              />
-            </div>
+              >
+                {loading ? (
+                  <Loader size="24" color="white" />
+                ) : (
+                  'Sign Up'
+                )}
+              </button>
+            </form>
 
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-3 py-3 bg-white/10 border-none rounded-lg text-white placeholder-white/60 focus:outline-none transition-colors duration-200"
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-3 py-3 bg-white/10 border-none rounded-lg text-white placeholder-white/60 focus:outline-none transition-colors duration-200"
-                required
-                minLength={6}
-                disabled={loading}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full px-3 py-3 bg-white/10 border-none rounded-lg text-white placeholder-white/60 focus:outline-none transition-colors duration-200"
-                required
-                minLength={6}
-                disabled={loading}
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full px-6 py-3 bg-purple-500 text-white rounded-xl font-bold 
-                        hover:bg-green-500 transition-all duration-300
-                        disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader size="24" color="white" />
-              ) : (
-                'Sign Up'
-              )}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-gray-300">
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="text-[#ff9f5a] hover:text-[#ff8c3b] transition-colors duration-200"
-            >
-              Log in
-            </Link>
-          </p>
+            <p className="mt-6 text-center text-sm text-gray-700">
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                className="text-[#9333EA] hover:text-[#7C22CE] transition-colors duration-200"
+              >
+                Log in
+              </Link>
+            </p>
+          </div>
         </div>
       </main>
     </div>
