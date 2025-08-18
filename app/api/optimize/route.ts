@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const GEMINI_API_KEY = "AIzaSyCoRFO_sEpSyIZg11QaemgNhiVqjSpjz1o";
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+const GEMINI_API_ENDPOINT = process.env.NEXT_PUBLIC_GEMINI_API_ENDPOINT || 'https://generativelanguage.googleapis.com';
+
+if (!GEMINI_API_KEY) {
+  throw new Error('NEXT_PUBLIC_GEMINI_API_KEY environment variable is not set');
+}
+
+const API_URL = `${GEMINI_API_ENDPOINT}/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 export async function POST(req: NextRequest) {
   try {

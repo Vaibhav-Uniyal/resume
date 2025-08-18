@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-// Hard-coded API key
-const genAI = new GoogleGenerativeAI('AIzaSyCoRFO_sEpSyIZg11QaemgNhiVqjSpjz1o');
+
+// API key and endpoint from environment variables
+const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+const apiEndpoint = process.env.NEXT_PUBLIC_GEMINI_API_ENDPOINT;
+
+if (!apiKey) {
+  throw new Error('NEXT_PUBLIC_GEMINI_API_KEY environment variable is not set');
+}
+
+// Initialize with custom endpoint if provided
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function POST(request: Request) {
   try {
@@ -21,7 +30,7 @@ export async function POST(request: Request) {
       .replace(/\n{3,}/g, '\n\n')
       .slice(0, 6000); // Limit to avoid token limits
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     const prompt = `Analyze the following resume and provide 5 job recommendations that match the candidate's skills and experience. 
     For each recommendation, include:

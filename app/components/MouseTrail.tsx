@@ -15,6 +15,7 @@ interface Particle {
 export default function MouseTrail() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isMounted, setIsMounted] = useState(false);
   
   // Define professional, subtle colors
   const trailColors = [
@@ -24,6 +25,9 @@ export default function MouseTrail() {
   ];
   
   useEffect(() => {
+    // Set mounted flag to prevent hydration mismatch
+    setIsMounted(true);
+    
     // Track mouse position
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -63,6 +67,11 @@ export default function MouseTrail() {
       window.removeEventListener('mousemove', throttledMouseMove);
     };
   }, []);
+  
+  // Don't render anything until component is mounted on client
+  if (!isMounted) {
+    return null;
+  }
   
   return (
     <div 

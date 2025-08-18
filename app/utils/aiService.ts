@@ -50,14 +50,19 @@ export async function optimizeResumeServerSide({
   jobDescription,
 }: OptimizeResumeRequest): Promise<OptimizeResumeResponse> {
   try {
-    // Hard-coded API key
-    const apiKey = 'AIzaSyCoRFO_sEpSyIZg11QaemgNhiVqjSpjz1o';
+    // API key and endpoint from environment variables
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiEndpoint = process.env.NEXT_PUBLIC_GEMINI_API_ENDPOINT;
+    
+    if (!apiKey) {
+      throw new Error('NEXT_PUBLIC_GEMINI_API_KEY environment variable is not set');
+    }
 
     // Initialize the Gemini API client
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Use the correct model name
-    const modelName = 'gemini-1.5-flash';
+    // Use Gemini 2.0 Flash model
+    const modelName = 'gemini-2.0-flash';
     
     const model = genAI.getGenerativeModel({ 
       model: modelName,

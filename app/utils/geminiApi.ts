@@ -1,11 +1,18 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
-// Hard-coded API key
-const apiKey = 'AIzaSyCoRFO_sEpSyIZg11QaemgNhiVqjSpjz1o';
+// API key and endpoint from environment variables
+const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+const apiEndpoint = process.env.NEXT_PUBLIC_GEMINI_API_ENDPOINT;
+
+if (!apiKey) {
+  throw new Error('NEXT_PUBLIC_GEMINI_API_KEY environment variable is not set');
+}
+
+// Initialize with API key
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Extract model name from endpoint or use default
-const MODEL_NAME = 'gemini-1.5-flash';
+// Use Gemini 2.0 Flash model
+const MODEL_NAME = 'gemini-2.0-flash';
 
 console.log(`Using Gemini model: ${MODEL_NAME}`);
 

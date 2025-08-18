@@ -4,23 +4,19 @@ import path from 'path';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import * as docx from 'docx';
 import mammoth from 'mammoth';
-// Import both PDF parsing libraries for redundancy
-import pdfParse from 'pdf-parse';
-import * as pdfjs from 'pdfjs-dist';
+
+// Remove static imports of PDF parsing libraries to avoid build issues
+// import pdfParse from 'pdf-parse';
+// import * as pdfjs from 'pdfjs-dist';
 
 // Destructure the docx library to get the components we need
 const { Document, Packer, Paragraph, HeadingLevel, AlignmentType } = docx;
 
-// Set up the worker for PDF.js (only used on server)
-// @ts-ignore - The types for pdfjs-dist are not perfect
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
-
-// Disable canvas usage for server-side parsing to avoid binary module issues
-// @ts-ignore - The types for pdfjs-dist are not perfect
-if (pdfjs.disableWorker !== undefined) {
-  // @ts-ignore
-  pdfjs.disableWorker = true;
-}
+// Remove PDF.js worker setup that was causing issues
+// pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+// if (pdfjs.disableWorker !== undefined) {
+//   pdfjs.disableWorker = true;
+// }
 
 // Function to convert text to PDF
 async function textToPdf(text: string): Promise<Uint8Array> {
@@ -173,6 +169,8 @@ async function docxToText(buffer: Buffer): Promise<string> {
 // Function to extract text from PDF using pdf-parse
 async function pdfToTextWithPdfParse(buffer: Buffer): Promise<string> {
   try {
+    // Use dynamic import to avoid build issues if pdf-parse is not available
+    const { default: pdfParse } = await import('pdf-parse');
     const data = await pdfParse(buffer);
     return data.text;
   } catch (error) {
@@ -184,6 +182,8 @@ async function pdfToTextWithPdfParse(buffer: Buffer): Promise<string> {
 // Function to extract text from PDF using PDF.js
 async function pdfToTextWithPdfJs(buffer: Buffer): Promise<string> {
   try {
+    // Use dynamic import to avoid build issues if pdfjs-dist is not available
+    const pdfjs = await import('pdfjs-dist');
     // Use a simplified approach that doesn't rely on canvas
     // @ts-ignore - The types for pdfjs-dist are not perfect
     const pdf = await pdfjs.getDocument({ data: buffer, disableWorker: true }).promise;
