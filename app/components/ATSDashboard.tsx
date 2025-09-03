@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { analyzeResumeWithGemini } from '../utils/geminiApi';
+
 import { useSkillsContext } from '../context/SkillsContext';
 
 interface ATSDashboardProps {
@@ -23,18 +23,30 @@ export default function ATSDashboard({ resumeText, onContinue }: ATSDashboardPro
     const analyzeResume = async () => {
       setLoading(true);
       try {
-        // Call Gemini API for analysis
-        const analysisResult = await analyzeResumeWithGemini(resumeText);
+        // Call the API route for analysis
+        const formData = new FormData();
+        formData.append('text', resumeText);
+        
+        const response = await fetch('/api/resume', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+        
+        const analysisResult = await response.json();
         
         // Update state with the analysis results
-        setScore(analysisResult.score);
-        setKeywords(analysisResult.keywords);
-        setSuggestions(analysisResult.suggestions);
-        setStrengths(analysisResult.strengths);
-        setWeaknesses(analysisResult.weaknesses);
+        setScore(analysisResult.atsScore);
+        setKeywords(analysisResult.keywords || []);
+        setSuggestions(analysisResult.suggestions || []);
+        setStrengths(analysisResult.strengths || []);
+        setWeaknesses(analysisResult.weaknesses || []);
         
         // Save keywords (skills) to global context
-        setSkills(analysisResult.keywords);
+        setSkills(analysisResult.keywords || []);
       } catch (error) {
         console.error('Error analyzing resume:', error);
         // Set fallback values in case of error
