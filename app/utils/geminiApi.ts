@@ -42,20 +42,25 @@ export async function analyzeResumeWithGemini(resumeText: string): Promise<ATSAn
     
     // Prepare a clearer, more structured prompt for ATS analysis
     const prompt = `
-You are an expert ATS (Applicant Tracking System) resume analyzer. Your task is to analyze the resume below for ATS compatibility.
+You are an expert ATS (Applicant Tracking System) resume analyzer. Analyze the resume text provided below with strict ATS parsing rules.  
 
 RESUME TEXT:
 ${cleanedResumeText}
 
 TASK:
-1. Identify 5-10 key skills/keywords from the resume
-2. Score the resume from 0-100 for ATS compatibility
-3. Provide 3-5 specific suggestions to improve the resume
-4. List 2-3 strengths of the resume
-5. List 2-3 weaknesses or areas for improvement
+1. Extract exactly 8-12 hard skills, technical keywords, or domain-specific terms from the resume (no soft skills like "communication" unless explicitly mentioned).
+2. Score the resume from 0 to 100 for ATS compatibility based on:
+   - Keyword density and relevance (40%)
+   - Formatting & structure (20%)
+   - Use of measurable achievements/metrics (20%)
+   - Section completeness (education, experience, skills, etc.) (20%)
+3. Provide 3-5 concrete and actionable suggestions to improve ATS compatibility (e.g., "Add more industry-specific keywords such as X", not vague tips).
+4. List 2-3 clear strengths of the resume that support ATS optimization.
+5. List 2-3 weaknesses or areas that could reduce ATS performance.
 
-RESPONSE FORMAT:
-Respond ONLY with a JSON object using this exact structure:
+OUTPUT FORMAT:
+Return ONLY a JSON object in the following structure without any extra text:
+
 {
   "score": number,
   "keywords": string[],
@@ -64,11 +69,11 @@ Respond ONLY with a JSON object using this exact structure:
   "weaknesses": string[]
 }
 
-IMPORTANT NOTES:
-- DO NOT include any explanatory text outside the JSON
-- If you cannot identify specific keywords, DO NOT return generic placeholders
-- Be specific and detailed in your analysis
-- Focus on ATS optimization aspects of the resume
+STRICT RULES:
+- Do not invent keywords not found in the resume.
+- Always return between 8–12 keywords.
+- Ensure the score breakdown is internally consistent with the evaluation criteria.
+- Do not include explanatory text outside the JSON.
 `;
 
     // Generate content with Gemini with safety settings adjusted
@@ -177,6 +182,10 @@ Answer these questions clearly:
         const scoreMatch = backupText.match(/score[^\d]*(\d+)/i);
         const score = scoreMatch ? parseInt(scoreMatch[1]) : 75;
         
+        console.log("Backup parsing - Raw text:", backupText.substring(0, 200));
+        console.log("Backup parsing - Score match:", scoreMatch);
+        console.log("Backup parsing - Extracted score:", score);
+        
         // Extract lists by looking for numbered points
         const keywordsSection = backupText.match(/keywords?[^\n]*\n((?:\s*[-\d.•]+[^\n]+\n?)+)/i);
         const suggestionsSection = backupText.match(/suggestions?[^\n]*\n((?:\s*[-\d.•]+[^\n]+\n?)+)/i);
@@ -210,6 +219,165 @@ Answer these questions clearly:
     return {
       score: 75,
       keywords: ["Resume Analysis Error", "Skills Not Detected", "Experience", "Education"],
+      suggestions: [
+        "Try uploading a clearer version of your resume",
+        "Ensure your resume is in a standard format",
+        "Add more specific skills and keywords to your resume"
+      ],
+      strengths: [
+        "Resume submitted successfully",
+        "Format appears to be standard"
+      ],
+      weaknesses: [
+        "AI couldn't fully analyze your resume",
+        "Consider adding more detailed information"
+      ]
+    };
+  }
+} 
+
+// New function to analyze PDF directly with Gemini
+export async function analyzeResumePDFWithGemini(pdfBuffer: Buffer): Promise<ATSAnalysisResult> {
+  try {
+    console.log("Starting PDF resume analysis with Gemini API");
+    
+    // Create a generative model instance
+    const model = genAI.getGenerativeModel({ model: MODEL_NAME });
+    
+    // Prepare the prompt for ATS analysis
+    const prompt = `
+You are an expert ATS (Applicant Tracking System) resume analyzer. Your task is to analyze the PDF resume for ATS compatibility.
+
+TASK:
+1. Identify 5-10 key skills/keywords from the resume
+2. Score the resume from 0-100 for ATS compatibility
+3. Provide 3-5 specific suggestions to improve the resume
+4. List 2-3 strengths of the resume
+5. List 2-3 weaknesses or areas for improvement
+
+RESPONSE FORMAT:
+Respond ONLY with a JSON object using this exact structure:
+{
+  "score": number,
+  "keywords": string[],
+  "suggestions": string[],
+  "strengths": string[],
+  "weaknesses": string[]
+}
+
+IMPORTANT NOTES:
+- DO NOT include any explanatory text outside the JSON
+- If you cannot identify specific keywords, DO NOT return generic placeholders
+- Be specific and detailed in your analysis
+- Focus on ATS optimization aspects of the resume
+`;
+
+    // Generate content with Gemini with safety settings
+    const generationConfig = {
+      temperature: 0.1,
+      topP: 0.8,
+      topK: 40,
+      maxOutputTokens: 1024,
+    };
+    
+    const safetySettings = [
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+      },
+    ];
+
+    console.log("Sending PDF to Gemini API...");
+    
+    // Send PDF directly to Gemini - Correct syntax for multimodal content
+    const result = await model.generateContent({
+      contents: [{
+        role: "user",
+        parts: [
+          {
+            inlineData: {
+              data: pdfBuffer.toString('base64'),
+              mimeType: 'application/pdf'
+            }
+          },
+          {
+            text: prompt
+          }
+        ]
+      }],
+      generationConfig,
+      safetySettings,
+    });
+
+    const response = await result.response;
+    const text = response.text();
+    
+    console.log("Received response from Gemini API");
+    
+    // Clean the response to ensure it's valid JSON
+    const cleanedText = text.trim()
+      .replace(/```json|```|\n/g, '')
+      .replace(/^[^{]*({.*})[^}]*$/, '$1'); // Extract just the JSON part
+    
+    console.log(`Cleaned response text: ${cleanedText.substring(0, 100)}...`);
+    
+    try {
+      // Parse the JSON response directly
+      const parsedResponse = JSON.parse(cleanedText) as ATSAnalysisResult;
+      console.log("Successfully parsed JSON response");
+      
+      // Validate all fields exist and are proper arrays/values
+      const validatedResponse = {
+        score: typeof parsedResponse.score === 'number' ? parsedResponse.score : 75,
+        keywords: Array.isArray(parsedResponse.keywords) ? parsedResponse.keywords : [],
+        suggestions: Array.isArray(parsedResponse.suggestions) ? parsedResponse.suggestions : [],
+        strengths: Array.isArray(parsedResponse.strengths) ? parsedResponse.strengths : [],
+        weaknesses: Array.isArray(parsedResponse.weaknesses) ? parsedResponse.weaknesses : []
+      };
+      
+      console.log("Returning validated response");
+      return validatedResponse;
+    } catch (jsonError) {
+      console.error('Error parsing JSON response:', jsonError);
+      console.log('Raw response:', text);
+      
+      // Fallback to default values if JSON parsing fails
+      return {
+        score: 75,
+        keywords: ["PDF Analysis Error", "Skills Not Detected", "Experience", "Education"],
+        suggestions: [
+          "Try uploading a clearer version of your resume",
+          "Ensure your resume is in a standard format",
+          "Add more specific skills and keywords to your resume"
+        ],
+        strengths: [
+          "Resume submitted successfully",
+          "Format appears to be standard"
+        ],
+        weaknesses: [
+          "AI couldn't fully analyze your resume",
+          "Consider adding more detailed information"
+        ]
+      };
+    }
+  } catch (error) {
+    console.error('Error analyzing PDF resume with Gemini:', error);
+    // Return reasonable default values in case of error
+    return {
+      score: 75,
+      keywords: ["PDF Analysis Error", "Skills Not Detected", "Experience", "Education"],
       suggestions: [
         "Try uploading a clearer version of your resume",
         "Ensure your resume is in a standard format",

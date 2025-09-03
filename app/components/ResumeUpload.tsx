@@ -7,38 +7,29 @@ import dynamic from 'next/dynamic';
 import mammoth from 'mammoth';
 import { useResumeContext } from '../context/ResumeContext';
 
-// Import types but not the actual library on server
-import type { TextItem } from 'pdfjs-dist/types/src/display/api';
-import type { PDFDocumentProxy } from 'pdfjs-dist';
-
-// Define variables to store PDF.js modules
-let pdfjs: any;
-let GlobalWorkerOptions: any;
-
-// Function to initialize PDF.js only on client side
-const initPdfJS = async () => {
-  if (typeof window === 'undefined') return;
-  
+// Function to extract text from PDF using Gemini API
+const extractTextFromPDF = async (file: File): Promise<string> => {
   try {
-    // Dynamically import PDF.js only on client-side
-    const pdfJsModule = await import('pdfjs-dist');
-    pdfjs = pdfJsModule;
-    GlobalWorkerOptions = pdfJsModule.GlobalWorkerOptions;
+    // Use the new API route that sends PDF directly to Gemini
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('action', 'extract');
     
-    // Set the worker source
-    const workerSrc = `/pdf.worker.min.js`;
-    GlobalWorkerOptions.workerSrc = workerSrc;
+    const response = await fetch('/api/analyze-pdf', {
+      method: 'POST',
+      body: formData,
+    });
     
-    // Disable canvas dependencies that cause webpack issues
-    // @ts-ignore - The property exists at runtime but not in TypeScript definitions
-    if (typeof pdfJsModule.disableWorker !== 'undefined') {
-      // @ts-ignore - Force disable worker to avoid canvas dependencies
-      pdfJsModule.disableWorker = true;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to extract text from PDF');
     }
     
-    console.log('PDF.js initialized successfully with worker path:', workerSrc);
+    const result = await response.json();
+    return result.text;
   } catch (error) {
-    console.error('Error initializing PDF.js:', error);
+    console.error('Error extracting text from PDF with Gemini:', error);
+    throw new Error('Failed to extract text from PDF file using Gemini API');
   }
 };
 
@@ -58,95 +49,25 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onUpload }) => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setResumeText, setOriginalText } = useResumeContext();
-  const [isPdfJsReady, setIsPdfJsReady] = useState(false);
-
-  // Initialize PDF.js on component mount
-  useEffect(() => {
-    initPdfJS().then(() => setIsPdfJsReady(true));
-  }, []);
-
-  // Function to extract text from PDF
-  const extractTextFromPDF = async (file: File): Promise<string> => {
-    if (!isPdfJsReady) {
-      await initPdfJS();
-      setIsPdfJsReady(true);
-    }
-    
+  // Function to handle file processing
+  const processFile = async (file: File): Promise<string> => {
     try {
-      const data = await file.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ 
-        data, 
-        disableWorker: true,
-        disableAutoFetch: true,
-        disableStream: true
-      }).promise;
+      const fileExtension = file.name.toLowerCase().split('.').pop();
       
-      let allTextContent: string[] = [];
-      const numPages = pdf.numPages;
-      
-      // Process pages in parallel with concurrency limit
-      const pagePromises: Promise<string>[] = [];
-      const CONCURRENCY_LIMIT = 5; // Process 5 pages at a time
-      
-      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-        // Process pages with concurrency limit
-        if (pagePromises.length >= CONCURRENCY_LIMIT) {
-          allTextContent.push(await pagePromises.shift()!);
-        }
-        
-        const pagePromise = processPage(pdf, pageNum);
-        pagePromises.push(pagePromise);
+      if (fileExtension === 'pdf') {
+        return await extractTextFromPDF(file);
+      } else if (fileExtension === 'docx') {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        return result.value;
+      } else if (fileExtension === 'txt') {
+        return await file.text();
+      } else {
+        throw new Error('Unsupported file format. Please upload a PDF, DOCX, or TXT file.');
       }
-      
-      // Process any remaining pages
-      while (pagePromises.length > 0) {
-        allTextContent.push(await pagePromises.shift()!);
-      }
-      
-      const fullText = allTextContent.join("\n\n");
-      console.log(`Extracted ${fullText.length} characters from PDF (${numPages} pages)`);
-      return fullText.trim();
     } catch (error) {
-      console.error("Error extracting text from PDF:", error);
+      console.error("Error processing file:", error);
       throw new Error("Failed to extract text from PDF. Please try another file or paste text directly.");
-    }
-  };
-
-  // Helper function to process a single PDF page
-  const processPage = async (pdf: any, pageNum: number): Promise<string> => {
-    try {
-      const page = await pdf.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      
-      // Simple approach to reduce dependencies
-      const pageText = textContent.items
-        .filter((item: any) => "str" in item)
-        .map((item: any) => item.str)
-        .join(" ");
-      
-      return pageText;
-    } catch (error) {
-      console.error(`Error processing page ${pageNum}:`, error);
-      return ""; // Return empty string for failed pages rather than breaking entire process
-    }
-  };
-
-  // Function to extract text from DOCX files
-  const extractTextFromDOCX = async (file: File): Promise<string> => {
-    try {
-      // Using mammoth.js to extract text from DOCX
-      const data = await file.arrayBuffer();
-      const result = await mammoth.extractRawText({ arrayBuffer: data });
-      
-      if (!result.value) {
-        throw new Error("No text content found in the document");
-      }
-      
-      console.log(`Extracted ${result.value.length} characters from DOCX`);
-      return result.value.trim();
-    } catch (error) {
-      console.error("Error extracting text from DOCX:", error);
-      throw new Error("Failed to extract text from DOCX. Please try another file or paste text directly.");
     }
   };
 
@@ -169,19 +90,9 @@ const ResumeUpload: React.FC<ResumeUploadProps> = ({ onUpload }) => {
       
       let text = '';
       
-      // Extract text based on file type
-      if (file.type === 'application/pdf') {
-        text = await extractTextFromPDF(file);
-      } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        text = await extractTextFromDOCX(file);
-      } else if (file.type === 'text/plain') {
-        text = await file.text();
-        console.log(`Extracted ${text.length} characters from text file`);
-      } else {
-        // Try to read as text for unknown types
-        console.log(`Unknown file type: ${file.type}, attempting to read as text`);
-        text = await file.text();
-      }
+      // Extract text using the unified processFile function
+      text = await processFile(file);
+      console.log(`Extracted ${text.length} characters from ${file.name}`);
       
       if (!text || !text.trim()) {
         throw new Error("No text could be extracted from this file. Please try another file or paste text directly.");
