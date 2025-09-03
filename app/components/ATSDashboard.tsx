@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { analyzeResumeWithGemini } from '../utils/geminiApi';
 import { useSkillsContext } from '../context/SkillsContext';
+import SkillBasedJobRecommendations from './SkillBasedJobRecommendations';
 
 interface ATSDashboardProps {
   resumeText: string;
@@ -166,6 +167,15 @@ export default function ATSDashboard({ resumeText, onContinue }: ATSDashboardPro
                 </ul>
               </div>
             </div>
+          </div>
+
+          {/* Job Recommendations Section */}
+          <div className="bg-background-light/10 backdrop-blur-sm rounded-xl p-6">
+            <h3 className="text-2xl font-semibold mb-4 text-center">Job Recommendations</h3>
+            <p className="text-content-muted text-center mb-6">
+              Based on your skills, here are personalized job recommendations with real opportunities
+            </p>
+            <SkillBasedJobRecommendations />
           </div>
 
           <div className="flex justify-center">

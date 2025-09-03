@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { enhanceJobRecommendations } from '../../../utils/jobSearchService';
 
 // API key and endpoint from environment variables
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -15,7 +16,7 @@ const MODEL_NAME = 'gemini-2.0-flash';
 
 export async function POST(request: Request) {
   try {
-    const { skills } = await request.json();
+    const { skills, location = 'us' } = await request.json();
 
     if (!skills || !Array.isArray(skills) || skills.length === 0) {
       return NextResponse.json(
@@ -102,6 +103,32 @@ STRICT RULES:
       // Attempt to parse the JSON response
       const data = JSON.parse(cleanedText);
       console.log("Successfully parsed job recommendations:", data);
+      
+      // Enhance recommendations with real jobs from Adzuna
+      if (data.recommendations && Array.isArray(data.recommendations)) {
+        console.log("Enhancing recommendations with real jobs...");
+        console.log("Original recommendations count:", data.recommendations.length);
+        try {
+          const enhancedRecommendations = await enhanceJobRecommendations(data.recommendations, location);
+          console.log("Enhanced recommendations count:", enhancedRecommendations.length);
+          console.log("First enhanced recommendation:", enhancedRecommendations[0]);
+          return NextResponse.json({
+            ...data,
+            recommendations: enhancedRecommendations,
+            enhanced: true,
+            location
+          });
+        } catch (enhanceError) {
+          console.error("Error enhancing recommendations:", enhanceError);
+          return NextResponse.json({
+            ...data,
+            enhanced: false,
+            location,
+            enhanceError: enhanceError instanceof Error ? enhanceError.message : 'Unknown error'
+          });
+        }
+      }
+      
       return NextResponse.json(data);
     } catch (jsonError) {
       console.error('Error parsing JSON from Gemini:', jsonError);

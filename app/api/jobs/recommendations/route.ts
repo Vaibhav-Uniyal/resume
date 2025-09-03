@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { enhanceJobRecommendations } from '../../../utils/jobSearchService';
 
 
 // API key and endpoint from environment variables
@@ -15,7 +16,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function POST(request: Request) {
   try {
-    const { resumeText } = await request.json();
+    const { resumeText, location = 'us' } = await request.json();
 
     if (!resumeText) {
       return NextResponse.json(
@@ -108,6 +109,29 @@ export async function POST(request: Request) {
     
     // Parse the JSON response
       const data = JSON.parse(cleanedText);
+      
+      // Enhance recommendations with real jobs from Adzuna
+      if (data.recommendations && Array.isArray(data.recommendations)) {
+        console.log("Enhancing full resume recommendations with real jobs...");
+        try {
+          const enhancedRecommendations = await enhanceJobRecommendations(data.recommendations, location);
+          return NextResponse.json({
+            ...data,
+            recommendations: enhancedRecommendations,
+            enhanced: true,
+            location
+          });
+        } catch (enhanceError) {
+          console.error("Error enhancing full resume recommendations:", enhanceError);
+          return NextResponse.json({
+            ...data,
+            enhanced: false,
+            location,
+            enhanceError: enhanceError instanceof Error ? enhanceError.message : 'Unknown error'
+          });
+        }
+      }
+      
       return NextResponse.json(data);
     } catch (jsonError) {
       console.error('Error parsing JSON from Gemini:', jsonError);

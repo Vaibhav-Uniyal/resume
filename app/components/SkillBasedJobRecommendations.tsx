@@ -5,6 +5,27 @@ import { motion } from 'framer-motion';
 import { useSkillsContext } from '../context/SkillsContext';
 import Loader from './Loader';
 
+interface RealJob {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  salary: string;
+  description: string;
+  url: string;
+  postedDate: string;
+  contractType: string;
+  category: string;
+  source: string;
+}
+
+interface SearchUrls {
+  linkedin: string;
+  indeed: string;
+  glassdoor: string;
+  ziprecruiter: string;
+}
+
 interface JobRecommendation {
   title: string;
   industry: string;
@@ -12,6 +33,10 @@ interface JobRecommendation {
   experienceLevel: string;
   description: string;
   matchReason: string;
+  realJobs?: RealJob[];
+  searchUrls?: SearchUrls;
+  realJobsCount?: number;
+  hasRealJobs?: boolean;
 }
 
 export default function SkillBasedJobRecommendations() {
@@ -19,6 +44,7 @@ export default function SkillBasedJobRecommendations() {
   const [recommendations, setRecommendations] = useState<JobRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const getRecommendations = async () => {
     if (!skills || skills.length === 0) {
@@ -153,16 +179,118 @@ export default function SkillBasedJobRecommendations() {
                   <p className="text-content-muted">{job.matchReason}</p>
                 </div>
                 
-                <button 
-                  className="w-full mt-4 px-4 py-2 bg-[#9333EA] text-white rounded-lg
-                           hover:bg-[#6821A8] transition-colors duration-200"
-                >
-                  Apply Now
-                </button>
+                <div className="flex flex-col space-y-2 mt-4">
+                  <button 
+                    className="w-full px-4 py-2 bg-[#9333EA] text-white rounded-lg
+                             hover:bg-[#6821A8] transition-colors duration-200"
+                  >
+                    Apply Now
+                  </button>
+                  
+                  {job.hasRealJobs && (
+                    <button
+                      onClick={() => setExpandedJob(expandedJob === job.title ? null : job.title)}
+                      className="w-full px-4 py-2 bg-[#9333EA]/20 text-[#9333EA] rounded-lg
+                               hover:bg-[#9333EA]/30 transition-colors duration-200 text-sm"
+                    >
+                      {expandedJob === job.title ? 'Hide' : 'Show'} Real Jobs ({job.realJobsCount})
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
+      )}
+
+      {/* Real Jobs Display */}
+      {expandedJob && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8 space-y-4"
+        >
+          <h3 className="text-xl font-semibold text-content">
+            Real Jobs for "{expandedJob}" 
+            {recommendations.find(rec => rec.title === expandedJob)?.realJobsCount && 
+              ` (${recommendations.find(rec => rec.title === expandedJob)?.realJobsCount} found)`
+            }
+          </h3>
+          
+          {recommendations.find(rec => rec.title === expandedJob)?.realJobs?.length > 0 ? (
+            <div className="max-h-96 overflow-y-auto space-y-4 pr-2">
+              {recommendations
+                .find(rec => rec.title === expandedJob)
+                ?.realJobs?.map((realJob, index) => (
+                <motion.div
+                  key={realJob.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-background-light/5 backdrop-blur-sm p-4 rounded-lg border border-[#9333EA]/20"
+                >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <h4 className="text-lg font-medium text-content">{realJob.title}</h4>
+                    <p className="text-[#9333EA]">{realJob.company}</p>
+                    <p className="text-content-muted text-sm">{realJob.location}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-green-500 font-medium">{realJob.salary}</p>
+                    <p className="text-content-muted text-xs">{realJob.postedDate}</p>
+                  </div>
+                </div>
+                
+                <p className="text-content-muted text-sm mb-3">{realJob.description}</p>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex space-x-2">
+                    <span className="px-2 py-1 bg-[#9333EA]/10 text-[#9333EA] rounded text-xs">
+                      {realJob.contractType}
+                    </span>
+                    <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded text-xs">
+                      {realJob.category}
+                    </span>
+                  </div>
+                  <a
+                    href={realJob.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1 bg-[#9333EA] text-white rounded text-sm hover:bg-[#6821A8] transition-colors"
+                  >
+                    Apply
+                  </a>
+                </div>
+                </motion.div>
+                ))}
+            </div>
+          ) : (
+            <div className="bg-background-light/5 backdrop-blur-sm p-4 rounded-lg border border-[#9333EA]/20 text-center">
+              <p className="text-content-muted mb-2">No real jobs found from Adzuna API</p>
+              <p className="text-sm text-content-muted">Use the search links below to find jobs on major job boards</p>
+            </div>
+          )}
+          
+          {/* Search Links */}
+          {recommendations.find(rec => rec.title === expandedJob)?.searchUrls && (
+            <div className="bg-background-light/5 backdrop-blur-sm p-4 rounded-lg border border-[#9333EA]/20">
+              <h4 className="text-content font-medium mb-3">Search More Jobs:</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(recommendations.find(rec => rec.title === expandedJob)?.searchUrls || {}).map(([platform, url]) => (
+                  <a
+                    key={platform}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-2 bg-[#9333EA]/10 text-[#9333EA] rounded text-sm hover:bg-[#9333EA]/20 transition-colors text-center capitalize"
+                  >
+                    {platform}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
       )}
       
       {!loading && recommendations.length === 0 && !error && (
