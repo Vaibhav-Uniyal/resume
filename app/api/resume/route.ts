@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { analyzeResumeWithGemini, analyzeResumePDFWithGemini } from '@/app/utils/geminiApi';
 
 export async function POST(request: NextRequest) {
   try {
@@ -6,14 +7,56 @@ export async function POST(request: NextRequest) {
     const file = formData.get('resume') as File;
     const text = formData.get('text') as string;
 
-    let resumeText = "";
+    let analysisResult;
 
     if (file) {
-      // Handle file upload
+      // Handle file upload - analyze PDF directly
       const buffer = await file.arrayBuffer();
-      resumeText = `File uploaded: ${file.name}`;
+      const pdfBuffer = Buffer.from(buffer);
+      
+      try {
+        analysisResult = await analyzeResumePDFWithGemini(pdfBuffer);
+      } catch (error) {
+        console.error("Error analyzing PDF with Gemini:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        
+        if (errorMessage.includes('API_KEY')) {
+          return NextResponse.json(
+            { error: "API configuration error. Please check your Gemini API key." },
+            { status: 500 }
+          );
+        } else if (errorMessage.includes('PDF')) {
+          return NextResponse.json(
+            { error: "Failed to process PDF. Please ensure the file is a valid PDF and try again." },
+            { status: 400 }
+          );
+        } else {
+          return NextResponse.json(
+            { error: `Analysis failed: ${errorMessage}` },
+            { status: 500 }
+          );
+        }
+      }
     } else if (text) {
-      resumeText = text;
+      // Handle text input
+      try {
+        analysisResult = await analyzeResumeWithGemini(text);
+      } catch (error) {
+        console.error("Error analyzing text with Gemini:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        
+        if (errorMessage.includes('API_KEY')) {
+          return NextResponse.json(
+            { error: "API configuration error. Please check your Gemini API key." },
+            { status: 500 }
+          );
+        } else {
+          return NextResponse.json(
+            { error: `Analysis failed: ${errorMessage}` },
+            { status: 500 }
+          );
+        }
+      }
     } else {
       return NextResponse.json(
         { error: "No resume text or file provided" },
@@ -21,17 +64,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sample logic for ATS score calculation
-    const atsScore = Math.floor(Math.random() * 100); // Random ATS score for testing
-    const suggestions = [
-      "Add more relevant keywords.",
-      "Use measurable results in your experience section.",
-      "Keep the formatting simple and ATS-friendly."
-    ];
-
     return NextResponse.json({
-      atsScore,
-      suggestions
+      atsScore: analysisResult.score,
+      suggestions: analysisResult.suggestions,
+      keywords: analysisResult.keywords,
+      strengths: analysisResult.strengths,
+      weaknesses: analysisResult.weaknesses
     });
   } catch (error) {
     console.error("Error analyzing resume:", error);
