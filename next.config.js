@@ -12,7 +12,21 @@ const nextConfig = {
         fs: false,
         path: false,
         stream: false,
-        canvas: false
+        canvas: false,
+        crypto: false,
+        os: false,
+        util: false,
+        buffer: false,
+        process: false,
+        assert: false,
+        http: false,
+        https: false,
+        zlib: false,
+        url: false,
+        querystring: false,
+        net: false,
+        tls: false,
+        child_process: false
       };
     }
     

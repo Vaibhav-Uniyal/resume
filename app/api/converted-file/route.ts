@@ -179,49 +179,20 @@ async function pdfToTextWithPdfParse(buffer: Buffer): Promise<string> {
   }
 }
 
-// Function to extract text from PDF using PDF.js
+// Function to extract text from PDF using PDF.js (disabled to avoid canvas issues)
 async function pdfToTextWithPdfJs(buffer: Buffer): Promise<string> {
-  try {
-    // Use dynamic import to avoid build issues if pdfjs-dist is not available
-    const pdfjs = await import('pdfjs-dist');
-    // Use a simplified approach that doesn't rely on canvas
-    // @ts-ignore - The types for pdfjs-dist are not perfect
-    const pdf = await pdfjs.getDocument({ data: buffer, disableWorker: true }).promise;
-    let text = '';
-    
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        // @ts-ignore - The types for pdfjs-dist are not perfect
-        .map(item => item.str)
-        .join(' ');
-      
-      text += pageText + '\n\n';
-    }
-    
-    return text;
-  } catch (error) {
-    console.error('Error extracting text from PDF with PDF.js:', error);
-    throw new Error('Failed to extract text from PDF with PDF.js');
-  }
+  // PDF.js disabled due to canvas module issues in Next.js
+  throw new Error('PDF.js parsing disabled - using pdf-parse fallback');
 }
 
-// Combined function to extract text from PDF using multiple methods for reliability
+// Combined function to extract text from PDF using pdf-parse only
 async function pdfToText(buffer: Buffer): Promise<string> {
   try {
-    // Try with PDF.js first
-    return await pdfToTextWithPdfJs(buffer);
+    // Use pdf-parse as the primary and only method
+    return await pdfToTextWithPdfParse(buffer);
   } catch (error) {
-    console.log('PDF.js extraction failed, trying pdf-parse as fallback');
-    try {
-      // If PDF.js fails, try with pdf-parse as fallback
-      return await pdfToTextWithPdfParse(buffer);
-    } catch (fallbackError) {
-      // If both fail, throw a comprehensive error
-      console.error('Both PDF extraction methods failed:', error, fallbackError);
-      throw new Error('Failed to extract text from PDF. The file may be corrupted, password-protected, or in an unsupported format.');
-    }
+    console.error('PDF extraction failed:', error);
+    throw new Error('Failed to extract text from PDF. The file may be corrupted, password-protected, or in an unsupported format.');
   }
 }
 
